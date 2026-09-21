@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-[#FAF8F5] text-slate-800 flex flex-col justify-between p-4 sm:p-6 md:p-8 font-sans selection:bg-orange-500 selection:text-white relative overflow-hidden">
-    <!-- 顶部环境光晕（温暖日光感） -->
+    <!-- 顶部环境光晕 -->
     <div class="absolute -top-36 -left-36 w-96 h-96 bg-orange-200/40 rounded-full blur-3xl pointer-events-none"></div>
     <div class="absolute -bottom-36 -right-36 w-96 h-96 bg-amber-200/40 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -12,7 +12,6 @@
       </div>
       <h1 class="text-3xl sm:text-4xl md:text-5xl font-black bg-gradient-to-r from-orange-600 via-amber-500 to-rose-500 bg-clip-text text-transparent tracking-tight flex items-center justify-center gap-3">
         <span>今天中午吃什么？</span>
-        <!-- 优雅的 SVG 汉堡动效，替代传统容易变形的 Emoji -->
         <span class="inline-flex items-center justify-center p-2 bg-orange-100 border border-orange-200 rounded-2xl shadow-sm text-orange-500 animate-bounce">
           <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5c-4.142 0-7.5 1.567-7.5 3.5h15c0-1.933-3.358-3.5-7.5-3.5zM4 11h16M4 15.5h16M5.5 19.5h13a1.5 1.5 0 001.5-1.5v-.5H4v.5a1.5 1.5 0 001.5 1.5z"></path>
@@ -54,13 +53,10 @@
         <div class="relative flex items-center justify-center my-2">
           <!-- 1. 转盘模式 -->
           <div v-show="mode === 'wheel'" class="relative flex items-center justify-center">
-            <!-- 顶部指针 -->
             <div class="absolute -top-3.5 z-20 w-0 h-0 border-x-8 border-x-transparent border-t-[20px] border-t-rose-500 drop-shadow-[0_4px_8px_rgba(244,63,94,0.4)]"></div>
-            <!-- Canvas 转盘外框 -->
             <div class="relative w-64 h-64 sm:w-72 sm:h-72 lg:w-76 lg:h-76 flex items-center justify-center p-1.5 rounded-full bg-white border-4 border-orange-100/80 shadow-2xl shadow-orange-500/10">
               <canvas ref="wheelCanvas" class="w-full h-full rounded-full transition-transform duration-75"></canvas>
             </div>
-            <!-- 圆心 GO 按钮 -->
             <button
               @click="startDraw"
               :disabled="isRolling || activeMenu.length === 0"
@@ -98,12 +94,13 @@
       <section class="lg:col-span-7 flex flex-col gap-6">
         <!-- 快捷场景切换 -->
         <div class="bg-white/80 border border-orange-100/80 backdrop-blur-xl rounded-3xl p-5 shadow-xl shadow-orange-950/5">
-          <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center justify-between gap-2 mb-3">
             <h2 class="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-2">
               <span class="text-orange-500">⚡</span> 快捷场景预设
             </h2>
             <span class="text-xs text-slate-400">{{ activeMenu.length }}/{{ menu.length }} 可选</span>
           </div>
+          
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             <button
               v-for="(preset, key) in presets"
@@ -119,7 +116,6 @@
 
         <!-- 菜单管理区 -->
         <div class="bg-white/80 border border-orange-100/80 backdrop-blur-xl rounded-3xl p-5 shadow-xl shadow-orange-950/5 space-y-4">
-          <!-- 添加输入框 -->
           <div class="flex gap-2">
             <input
               v-model="newItem"
@@ -136,7 +132,6 @@
             </button>
           </div>
 
-          <!-- 操作栏 -->
           <div class="flex items-center justify-between text-xs text-slate-400 px-1 pt-1 border-t border-slate-100">
             <span>点击标签切换【开启/禁用】</span>
             <div class="flex gap-4">
@@ -145,7 +140,6 @@
             </div>
           </div>
 
-          <!-- 标签展示区（带优雅动态色盘） -->
           <div class="flex flex-wrap gap-2.5 max-h-56 overflow-y-auto p-1 custom-scrollbar">
             <div
               v-for="(item, index) in menu"
@@ -170,13 +164,87 @@
       </section>
     </main>
 
-    <!-- 抽中结果：炫酷弹窗 -->
+    <!-- 📌 右下角常驻悬浮分享按钮 (FAB) -->
+    <button
+      @click="showShareMenuModal = true"
+      class="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black px-4 py-3 sm:px-5 sm:py-3.5 rounded-full shadow-2xl shadow-orange-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-2 border-2 border-white/80"
+    >
+      <span class="text-base sm:text-lg animate-pulse">✨</span>
+      <span class="text-xs sm:text-sm tracking-wide">分享应用</span>
+    </button>
+
+    <!-- 聚合分享弹窗 Modal -->
+    <div 
+      v-if="showShareMenuModal" 
+      class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+      @click="showShareMenuModal = false"
+    >
+      <div 
+        class="bg-white border border-orange-100 rounded-3xl p-6 max-w-sm w-full shadow-2xl shadow-orange-950/20 relative overflow-hidden animate-scale-up"
+        @click.stop
+      >
+        <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+          <h3 class="text-base font-black text-slate-800 flex items-center gap-1.5">
+            <span>✨</span> 分享今天吃什么
+          </h3>
+          <button @click="showShareMenuModal = false" class="text-slate-400 hover:text-slate-600 font-bold text-lg">×</button>
+        </div>
+
+        <div class="space-y-2.5">
+          <!-- 方式 1: 复制菜单链接 -->
+          <button 
+            @click="copyMenuUrl"
+            class="w-full p-3.5 bg-orange-50/80 hover:bg-orange-100/80 border border-orange-200/80 rounded-2xl text-left transition-all flex items-center justify-between group cursor-pointer"
+          >
+            <div class="flex items-center gap-3">
+              <span class="p-2 bg-orange-500 text-white rounded-xl text-lg">🔗</span>
+              <div>
+                <p class="text-xs font-bold text-slate-800">复制菜单链接</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">同步当前你选中的菜谱给好友</p>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-orange-600 group-hover:translate-x-1 transition-transform">复制 →</span>
+          </button>
+
+          <!-- 方式 2: 生成拍立得海报 -->
+          <button 
+            @click="triggerPosterGenerate"
+            class="w-full p-3.5 bg-amber-50/80 hover:bg-amber-100/80 border border-amber-200/80 rounded-2xl text-left transition-all flex items-center justify-between group cursor-pointer"
+          >
+            <div class="flex items-center gap-3">
+              <span class="p-2 bg-amber-500 text-white rounded-xl text-lg">📸</span>
+              <div>
+                <p class="text-xs font-bold text-slate-800">生成精致海报</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">生成带专属网址与签名图片</p>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-amber-700 group-hover:translate-x-1 transition-transform">生成 →</span>
+          </button>
+
+          <!-- 方式 3: 系统/微信原生分享 -->
+          <button 
+            @click="triggerNativeShare"
+            class="w-full p-3.5 bg-rose-50/80 hover:bg-rose-100/80 border border-rose-200/80 rounded-2xl text-left transition-all flex items-center justify-between group cursor-pointer"
+          >
+            <div class="flex items-center gap-3">
+              <span class="p-2 bg-rose-500 text-white rounded-xl text-lg">📲</span>
+              <div>
+                <p class="text-xs font-bold text-slate-800">发送给微信/好友</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">拉起手机原生分享面板</p>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-rose-600 group-hover:translate-x-1 transition-transform">分享 →</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 抽中结果弹窗 -->
     <div 
       v-if="showModal && winnerItem" 
       class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
     >
       <div class="bg-white border border-orange-100 rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl shadow-orange-950/20 relative overflow-hidden animate-scale-up">
-        <!-- 弹窗背景日光光晕 -->
         <div class="absolute -top-20 -left-20 w-40 h-40 bg-orange-200/50 rounded-full blur-2xl pointer-events-none"></div>
         <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-amber-200/50 rounded-full blur-2xl pointer-events-none"></div>
 
@@ -193,17 +261,52 @@
           >
             好嘞，就吃这个！ 😋
           </button>
-          <button
-            @click="excludeAndReroll"
-            class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-rose-500 font-bold rounded-2xl text-xs transition-all cursor-pointer"
-          >
-            不喜欢，排除它重抽 🔄
-          </button>
+          
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              @click="generatePoster(winnerItem.text)"
+              class="py-2.5 bg-orange-50 hover:bg-orange-100 border border-orange-200/80 text-orange-600 font-bold rounded-2xl text-xs transition-all cursor-pointer flex items-center justify-center gap-1"
+            >
+              <span>📸</span> 导出海报
+            </button>
+            <button
+              @click="excludeAndReroll"
+              class="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-rose-500 font-bold rounded-2xl text-xs transition-all cursor-pointer"
+            >
+              不喜欢重抽 🔄
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 页脚：支持点击跳转 Telegram -->
+    <!-- 海报预览弹窗 -->
+    <div 
+      v-if="posterImgUrl" 
+      class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-fade-in"
+      @click="posterImgUrl = ''"
+    >
+      <div class="relative max-w-xs sm:max-w-sm w-full bg-white rounded-3xl p-3 shadow-2xl animate-scale-up" @click.stop>
+        <img :src="posterImgUrl" alt="美食决定海报" class="w-full h-auto rounded-2xl border" />
+        <p class="text-center text-xs text-slate-500 mt-3 mb-1 font-bold">提示：在手机上可长按上方图片保存到相册 📱</p>
+        <button 
+          @click="posterImgUrl = ''" 
+          class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl mt-2 cursor-pointer"
+        >
+          关闭预览
+        </button>
+      </div>
+    </div>
+
+    <!-- Toast 轻提示 -->
+    <div 
+      v-if="toastMessage" 
+      class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-xl animate-fade-in flex items-center gap-2"
+    >
+      <span>✨</span> {{ toastMessage }}
+    </div>
+
+    <!-- 页脚 -->
     <footer class="mt-8 text-center text-xs text-slate-400 py-3 relative z-10">
       <p>
         <a 
@@ -232,28 +335,23 @@ interface MenuItem {
   textColor: string
 }
 
-// 丰富的美食 Emoji 词库，防止重复
 const foodEmojiLibrary = [
   '🍔', '🍕', '🍟', '🌭', '🍿', '🥓', '🍳', '🧇', '🥞', '🥐', 
   '🍞', '🥨', '🧀', '🥗', '🥣', '🍱', '🍘', '🍙', '🍚', '🍛', 
   '🍜', '🍝', '🍢', '🍣', '🍤', '🍥', '🥮', '🍡', '🥟', '🥡', 
-  '🦪', '🥩', '🍗', '🍖', '🍲', '🌮', '🌯', '🥙', '🧆', '🍦', 
-  '🍩', '🍪', '🎂', '🍰', '🧁', '🥧', '🍫', '🍬', '🍭', '🧃'
+  '🦪', '🥩', '🍗', '🍖', '🍲', '🌮', '🌯', '🥙', '🧆', '🍦'
 ]
 
-// 优雅的莫兰迪/马卡龙色彩库，给未匹配的标签分配柔和色彩
 const colorPalette = [
-  { bg: 'rgba(255, 237, 213, 0.6)', border: 'rgba(253, 186, 116, 0.8)', text: '#c2410c' }, // 暖橘
-  { bg: 'rgba(254, 243, 199, 0.6)', border: 'rgba(252, 211, 77, 0.8)',  text: '#b45309' }, // 琥珀
-  { bg: 'rgba(207, 250, 254, 0.6)', border: 'rgba(103, 232, 249, 0.8)', text: '#0e7490' }, // 青蓝
-  { bg: 'rgba(209, 250, 229, 0.6)', border: 'rgba(110, 231, 183, 0.8)', text: '#047857' }, // 薄荷
-  { bg: 'rgba(252, 231, 243, 0.6)', border: 'rgba(249, 168, 212, 0.8)', text: '#be185d' }, // 蜜桃粉
-  { bg: 'rgba(238, 242, 255, 0.6)', border: 'rgba(199, 210, 254, 0.8)', text: '#4338ca' }  // 丁香紫
+  { bg: 'rgba(255, 237, 213, 0.6)', border: 'rgba(253, 186, 116, 0.8)', text: '#c2410c' },
+  { bg: 'rgba(254, 243, 199, 0.6)', border: 'rgba(252, 211, 77, 0.8)',  text: '#b45309' },
+  { bg: 'rgba(207, 250, 254, 0.6)', border: 'rgba(103, 232, 249, 0.8)', text: '#0e7490' },
+  { bg: 'rgba(209, 250, 229, 0.6)', border: 'rgba(110, 231, 183, 0.8)', text: '#047857' },
+  { bg: 'rgba(252, 231, 243, 0.6)', border: 'rgba(249, 168, 212, 0.8)', text: '#be185d' },
+  { bg: 'rgba(238, 242, 255, 0.6)', border: 'rgba(199, 210, 254, 0.8)', text: '#4338ca' }
 ]
 
-// 智能元数据映射引擎：输出【Emoji, 背景色, 边框色, 文字色】
 const getGourmetMeta = (text: string) => {
-  // 1. 精准关键词匹配
   if (text.includes('麦当劳') || text.includes('汉堡')) return { icon: '🍔', ...colorPalette[0] }
   if (text.includes('肯德基') || text.includes('炸鸡')) return { icon: '🍗', ...colorPalette[0] }
   if (text.includes('火锅') || text.includes('麻辣烫') || text.includes('串串')) return { icon: '🍲', ...colorPalette[4] }
@@ -265,19 +363,17 @@ const getGourmetMeta = (text: string) => {
   if (text.includes('披萨')) return { icon: '🍕', ...colorPalette[1] }
   if (text.includes('饺') || text.includes('包子')) return { icon: '🥟', ...colorPalette[1] }
 
-  // 2. Hash 计算：保证非预设菜名也有唯一且固定的 Emoji 与主题色彩
   let hash = 0
   for (let i = 0; i < text.length; i++) {
     hash = text.charCodeAt(i) + ((hash << 5) - hash)
   }
   const positiveHash = Math.abs(hash)
-  const icon = foodEmojiLibrary[positiveHash % foodEmojiLibrary.length]
-  const color = colorPalette[positiveHash % colorPalette.length]
-
-  return { icon, ...color }
+  return {
+    icon: foodEmojiLibrary[positiveHash % foodEmojiLibrary.length],
+    ...colorPalette[positiveHash % colorPalette.length]
+  }
 }
 
-// 场景预设
 const presets: Record<string, { name: string; icon: string; items: string[] }> = {
   fast: { name: '工作日快餐', icon: '⚡', items: ['黄焖鸡米饭', '麻辣烫', '兰州拉面', '麦当劳', '便利店便当', '沙县小吃'] },
   treat: { name: '犒劳大餐', icon: '🍲', items: ['海底捞火锅', '酸菜鱼', '日料刺身', '韩式烤肉', '烤鸭', '牛排'] },
@@ -291,14 +387,19 @@ const newItem = ref('')
 const currentDisplay = ref('')
 const winnerItem = ref<MenuItem | null>(null)
 const showModal = ref(false)
+const showShareMenuModal = ref(false)
 const isRolling = ref(false)
+const toastMessage = ref('')
+const posterImgUrl = ref('')
 
 const wheelCanvas = ref<HTMLCanvasElement | null>(null)
-
 const activeMenu = computed(() => menu.value.filter(item => item.enabled))
-
-// 转盘调色盘：明亮诱人的美食暖色盘
 const wheelColors = ['#FF6B35', '#FFB800', '#2EC4B6', '#E71D36', '#FF9F1C', '#10B981', '#8B5CF6', '#F43F5E']
+
+const showToast = (msg: string) => {
+  toastMessage.value = msg
+  setTimeout(() => { toastMessage.value = '' }, 2500)
+}
 
 const drawWheel = (rotationAngle = 0) => {
   const canvas = wheelCanvas.value
@@ -364,15 +465,32 @@ const drawWheel = (rotationAngle = 0) => {
 let currentRotation = 0
 
 onMounted(() => {
-  const saved = localStorage.getItem('my_lunch_menu_v6')
-  if (saved) {
-    menu.value = JSON.parse(saved)
+  const params = new URLSearchParams(window.location.search)
+  const sharedItems = params.get('items')
+  
+  if (sharedItems) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(sharedItems))
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        menu.value = parsed.map(text => {
+          const meta = getGourmetMeta(text)
+          return { text, icon: meta.icon, bgColor: meta.bg, borderColor: meta.border, textColor: meta.text, enabled: true }
+        })
+        showToast('已成功同步好友分享的菜单！')
+      }
+    } catch (e) {
+      console.error(e)
+    }
   } else {
-    loadPreset('fast')
+    const saved = localStorage.getItem('my_lunch_menu_v6')
+    if (saved) {
+      menu.value = JSON.parse(saved)
+    } else {
+      loadPreset('fast')
+    }
   }
-  nextTick(() => {
-    drawWheel(currentRotation)
-  })
+
+  nextTick(() => drawWheel(currentRotation))
 })
 
 watch(menu, (newMenu) => {
@@ -388,49 +506,25 @@ const addItem = () => {
   const text = newItem.value.trim()
   if (text && !menu.value.some(m => m.text === text)) {
     const meta = getGourmetMeta(text)
-    menu.value.push({
-      text,
-      icon: meta.icon,
-      bgColor: meta.bg,
-      borderColor: meta.border,
-      textColor: meta.text,
-      enabled: true
-    })
+    menu.value.push({ text, icon: meta.icon, bgColor: meta.bg, borderColor: meta.border, textColor: meta.text, enabled: true })
     newItem.value = ''
   }
 }
 
-const removeItem = (index: number) => {
-  menu.value.splice(index, 1)
-}
-
-const toggleItem = (index: number) => {
-  menu.value[index].enabled = !menu.value[index].enabled
-}
+const removeItem = (index: number) => { menu.value.splice(index, 1) }
+const toggleItem = (index: number) => { menu.value[index].enabled = !menu.value[index].enabled }
 
 const loadPreset = (key: string) => {
   if (presets[key]) {
     menu.value = presets[key].items.map(text => {
       const meta = getGourmetMeta(text)
-      return {
-        text,
-        icon: meta.icon,
-        bgColor: meta.bg,
-        borderColor: meta.border,
-        textColor: meta.text,
-        enabled: true
-      }
+      return { text, icon: meta.icon, bgColor: meta.bg, borderColor: meta.border, textColor: meta.text, enabled: true }
     })
   }
 }
 
-const resetDefault = () => {
-  loadPreset('fast')
-}
-
-const clearAll = () => {
-  menu.value = []
-}
+const resetDefault = () => { loadPreset('fast') }
+const clearAll = () => { menu.value = [] }
 
 const startDraw = () => {
   const items = activeMenu.value
@@ -488,53 +582,150 @@ const startDraw = () => {
 const excludeAndReroll = () => {
   if (winnerItem.value) {
     const target = menu.value.find(m => m.text === winnerItem.value?.text)
-    if (target) {
-      target.enabled = false
-    }
+    if (target) target.enabled = false
   }
   showModal.value = false
-  setTimeout(() => {
-    startDraw()
-  }, 300)
+  setTimeout(() => startDraw(), 300)
+}
+
+// ---------------- 悬浮分享弹窗操作 ----------------
+
+const buildShareUrl = () => {
+  const activeItems = activeMenu.value.map(i => i.text)
+  const encoded = encodeURIComponent(JSON.stringify(activeItems))
+  return `${window.location.origin}${window.location.pathname}?items=${encoded}`
+}
+
+// 方式 1: 复制链接
+const copyMenuUrl = () => {
+  const url = buildShareUrl()
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url)
+    showToast('菜单链接已复制到剪贴板！')
+  } else {
+    showToast('当前环境不支持，请手动复制浏览器地址栏')
+  }
+  showShareMenuModal.value = false
+}
+
+// 方式 2: 生成海报
+const triggerPosterGenerate = () => {
+  showShareMenuModal.value = false
+  generatePoster(winnerItem.value?.text || activeMenu.value[0]?.text || '美食')
+}
+
+// 方式 3: 原生分享
+const triggerNativeShare = async () => {
+  const url = buildShareUrl()
+  showShareMenuModal.value = false
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: '今天中午吃什么？',
+        text: '我为你挑选了一份午餐决选菜单，快来抽一把！',
+        url: url
+      })
+      showToast('系统分享框已拉起！')
+    } catch (err) {
+      console.log('取消分享')
+    }
+  } else {
+    copyMenuUrl()
+  }
+}
+
+// Canvas 绘制带作者与网址的海报
+const generatePoster = (foodText: string) => {
+  const targetMeta = getGourmetMeta(foodText)
+
+  const canvas = document.createElement('canvas')
+  canvas.width = 600
+  canvas.height = 800
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+
+  const bgGradient = ctx.createLinearGradient(0, 0, 0, 800)
+  bgGradient.addColorStop(0, '#FAF8F5')
+  bgGradient.addColorStop(1, '#FFF3E0')
+  ctx.fillStyle = bgGradient
+  ctx.fillRect(0, 0, 600, 800)
+
+  ctx.fillStyle = '#FFFFFF'
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.08)'
+  ctx.shadowBlur = 30
+  ctx.shadowOffsetY = 10
+  ctx.roundRect(40, 50, 520, 700, 24)
+  ctx.fill()
+  ctx.shadowColor = 'transparent'
+
+  ctx.fillStyle = '#F97316'
+  ctx.font = 'bold 24px sans-serif'
+  ctx.textAlign = 'center'
+  ctx.fillText('✨ 今天中午吃什么？', 300, 115)
+
+  ctx.fillStyle = '#FFF7ED'
+  ctx.beginPath()
+  ctx.arc(300, 270, 90, 0, Math.PI * 2)
+  ctx.fill()
+
+  ctx.font = '80px sans-serif'
+  ctx.fillText(targetMeta.icon, 300, 300)
+
+  ctx.fillStyle = '#94A3B8'
+  ctx.font = '14px sans-serif'
+  ctx.fillText('今日美食决定', 300, 410)
+
+  ctx.fillStyle = '#1E293B'
+  ctx.font = 'bold 42px sans-serif'
+  ctx.fillText(foodText, 300, 470)
+
+  ctx.strokeStyle = '#E2E8F0'
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(90, 530)
+  ctx.lineTo(510, 530)
+  ctx.stroke()
+
+  const currentHost = window.location.host && window.location.host !== 'localhost:5173' 
+    ? window.location.origin 
+    : 'https://what-to-eat.vercel.app'
+    
+  const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+  
+  ctx.fillStyle = '#64748B'
+  ctx.font = '14px sans-serif'
+  ctx.fillText(`📅 决定时间：${dateStr}`, 300, 580)
+  
+  ctx.fillStyle = '#F97316'
+  ctx.font = 'bold 15px sans-serif'
+  ctx.fillText(`🌐 体验网站：${currentHost}`, 300, 620)
+
+  ctx.fillStyle = '#94A3B8'
+  ctx.font = '13px sans-serif'
+  ctx.fillText('作者：小鱼哥哥 (t.me/xiaoyuGeG)', 300, 655)
+
+  const imgData = canvas.toDataURL('image/png')
+  posterImgUrl.value = imgData
+
+  const link = document.createElement('a')
+  link.download = `今日吃什么-${foodText}.png`
+  link.href = imgData
+  link.click()
+
+  showToast('海报已生成！包含了网址与署名')
 }
 
 const triggerConfetti = () => {
-  confetti({
-    particleCount: 100,
-    spread: 80,
-    origin: { y: 0.6 }
-  })
+  confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } })
 }
 </script>
 
 <style scoped>
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes scaleUp {
-  from { transform: scale(0.9); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.25s ease-out forwards;
-}
-
-.animate-scale-up {
-  animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(241, 245, 249, 0.8);
-  border-radius: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(203, 213, 225, 0.8);
-  border-radius: 4px;
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.animate-fade-in { animation: fadeIn 0.25s ease-out forwards; }
+.animate-scale-up { animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(241, 245, 249, 0.8); border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(203, 213, 225, 0.8); border-radius: 4px; }
 </style>
