@@ -27,7 +27,6 @@
     <main class="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 my-auto items-start relative z-10">
       <!-- 左侧：抽奖舞台 -->
       <section class="lg:col-span-5 flex flex-col items-center bg-white/80 border border-orange-100/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl shadow-orange-950/5 relative">
-        <!-- 模式切换 TAB -->
         <div class="flex bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60 mb-6 w-full max-w-xs shadow-inner">
           <button
             @click="mode = 'wheel'"
@@ -49,9 +48,7 @@
           </button>
         </div>
 
-        <!-- 抽奖展示区 -->
         <div class="relative flex items-center justify-center my-2">
-          <!-- 1. 转盘模式 -->
           <div v-show="mode === 'wheel'" class="relative flex items-center justify-center">
             <div class="absolute -top-3.5 z-20 w-0 h-0 border-x-8 border-x-transparent border-t-[20px] border-t-rose-500 drop-shadow-[0_4px_8px_rgba(244,63,94,0.4)]"></div>
             <div class="relative w-64 h-64 sm:w-72 sm:h-72 lg:w-76 lg:h-76 flex items-center justify-center p-1.5 rounded-full bg-white border-4 border-orange-100/80 shadow-2xl shadow-orange-500/10">
@@ -66,7 +63,6 @@
             </button>
           </div>
 
-          <!-- 2. 老虎机模式 -->
           <div v-show="mode === 'slot'" class="w-64 sm:w-72 lg:w-76 h-64 sm:h-72 lg:h-76 flex flex-col items-center justify-center bg-orange-50/50 border border-orange-100 rounded-3xl p-4 shadow-inner relative overflow-hidden">
             <div class="w-full bg-white border border-orange-200/60 rounded-2xl py-12 px-4 text-center my-auto shadow-lg shadow-orange-950/5 relative overflow-hidden">
               <span 
@@ -79,7 +75,6 @@
           </div>
         </div>
 
-        <!-- 主抽奖按钮 -->
         <button
           @click="startDraw"
           :disabled="isRolling || activeMenu.length === 0"
@@ -92,7 +87,6 @@
 
       <!-- 右侧：场景预设与菜单管理 -->
       <section class="lg:col-span-7 flex flex-col gap-6">
-        <!-- 快捷场景切换 -->
         <div class="bg-white/80 border border-orange-100/80 backdrop-blur-xl rounded-3xl p-5 shadow-xl shadow-orange-950/5">
           <div class="flex items-center justify-between gap-2 mb-3">
             <h2 class="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-2">
@@ -114,7 +108,6 @@
           </div>
         </div>
 
-        <!-- 菜单管理区 -->
         <div class="bg-white/80 border border-orange-100/80 backdrop-blur-xl rounded-3xl p-5 shadow-xl shadow-orange-950/5 space-y-4">
           <div class="flex gap-2">
             <input
@@ -221,16 +214,16 @@
             <span class="text-xs font-bold text-amber-700 group-hover:translate-x-1 transition-transform">生成 →</span>
           </button>
 
-          <!-- 方式 3: 系统/微信原生分享 -->
+          <!-- 方式 3: 带海报的原生分享 -->
           <button 
-            @click="triggerNativeShare"
+            @click="triggerNativeShareWithPoster"
             class="w-full p-3.5 bg-rose-50/80 hover:bg-rose-100/80 border border-rose-200/80 rounded-2xl text-left transition-all flex items-center justify-between group cursor-pointer"
           >
             <div class="flex items-center gap-3">
               <span class="p-2 bg-rose-500 text-white rounded-xl text-lg">📲</span>
               <div>
-                <p class="text-xs font-bold text-slate-800">发送给微信/好友</p>
-                <p class="text-[11px] text-slate-500 mt-0.5">拉起手机原生分享面板</p>
+                <p class="text-xs font-bold text-slate-800">图文直接发送 (带海报)</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">直接带海报文件拉起微信/分享</p>
               </div>
             </div>
             <span class="text-xs font-bold text-rose-600 group-hover:translate-x-1 transition-transform">分享 →</span>
@@ -588,7 +581,7 @@ const excludeAndReroll = () => {
   setTimeout(() => startDraw(), 300)
 }
 
-// ---------------- 悬浮分享弹窗操作 ----------------
+// ---------------- 悬浮分享与图片文件发送 ----------------
 
 const buildShareUrl = () => {
   const activeItems = activeMenu.value.map(i => i.text)
@@ -596,53 +589,78 @@ const buildShareUrl = () => {
   return `${window.location.origin}${window.location.pathname}?items=${encoded}`
 }
 
-// 方式 1: 复制链接
 const copyMenuUrl = () => {
   const url = buildShareUrl()
   if (navigator.clipboard) {
     navigator.clipboard.writeText(url)
     showToast('菜单链接已复制到剪贴板！')
   } else {
-    showToast('当前环境不支持，请手动复制浏览器地址栏')
+    showToast('当前环境不支持，请手动复制地址栏')
   }
   showShareMenuModal.value = false
 }
 
-// 方式 2: 生成海报
 const triggerPosterGenerate = () => {
   showShareMenuModal.value = false
   generatePoster(winnerItem.value?.text || activeMenu.value[0]?.text || '美食')
 }
 
-// 方式 3: 原生分享
-const triggerNativeShare = async () => {
-  const url = buildShareUrl()
+// 🌟 核心：Canvas 转换为 File 并带着海报一起拉起系统原生分享
+const triggerNativeShareWithPoster = async () => {
   showShareMenuModal.value = false
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: '今天中午吃什么？',
-        text: '我为你挑选了一份午餐决选菜单，快来抽一把！',
-        url: url
-      })
-      showToast('系统分享框已拉起！')
-    } catch (err) {
-      console.log('取消分享')
+  const foodText = winnerItem.value?.text || activeMenu.value[0]?.text || '美食'
+  const canvas = buildCanvasPoster(foodText)
+  const url = buildShareUrl()
+
+  if (!canvas) return
+
+  // 转换为 File 对象
+  canvas.toBlob(async (blob) => {
+    if (!blob) return
+    const file = new File([blob], `今日吃什么-${foodText}.png`, { type: 'image/png' })
+
+    // 检查浏览器原生分享是否支持发送文件 (files)
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          title: '今天中午吃什么？',
+          text: `我帮你抽中了【${foodText}】，快点击链接来看看我的决选菜单吧！`,
+          url: url,
+          files: [file] // 👈 将生成的海报文件传递给微信/Telegram
+        })
+        showToast('海报与链接已同时成功分享！')
+        return
+      } catch (err) {
+        console.log('取消分享')
+      }
     }
-  } else {
-    copyMenuUrl()
-  }
+
+    // 降级支持：如果浏览器不支持 files 字段分享，拉起普通文本分享并弹出图片
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: '今天中午吃什么？',
+          text: `今日美食决选：${foodText}`,
+          url: url
+        })
+      } catch (e) {}
+    } else {
+      copyMenuUrl()
+    }
+
+    // 展示预览弹窗供手动长按保存图片
+    posterImgUrl.value = canvas.toDataURL('image/png')
+  }, 'image/png')
 }
 
-// Canvas 绘制带作者与网址的海报
-const generatePoster = (foodText: string) => {
+// 绘制海报画布基础函数
+const buildCanvasPoster = (foodText: string): HTMLCanvasElement | null => {
   const targetMeta = getGourmetMeta(foodText)
-
   const canvas = document.createElement('canvas')
   canvas.width = 600
   canvas.height = 800
   const ctx = canvas.getContext('2d')
-  if (!ctx) return
+  if (!ctx) return null
 
   const bgGradient = ctx.createLinearGradient(0, 0, 0, 800)
   bgGradient.addColorStop(0, '#FAF8F5')
@@ -703,6 +721,13 @@ const generatePoster = (foodText: string) => {
   ctx.fillStyle = '#94A3B8'
   ctx.font = '13px sans-serif'
   ctx.fillText('作者：小鱼哥哥 (t.me/xiaoyuGeG)', 300, 655)
+
+  return canvas
+}
+
+const generatePoster = (foodText: string) => {
+  const canvas = buildCanvasPoster(foodText)
+  if (!canvas) return
 
   const imgData = canvas.toDataURL('image/png')
   posterImgUrl.value = imgData
